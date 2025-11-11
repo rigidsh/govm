@@ -23,7 +23,7 @@ type PortConfig struct {
 	ModePort          uint16
 	FlipFlopResetPort uint16 // Tested W. not support R
 	MasterRestPort    uint16
-	StatusPort        uint16 //TODO: impl
+	StatusPort        uint16
 }
 
 func (dma *DMA) ConnectChannel(channelNumber uint8, connector *ChannelConnector) {
