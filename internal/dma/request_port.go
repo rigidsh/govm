@@ -26,7 +26,7 @@ func (dma *DMA) setupRequestPort(requestPort uint16) {
 				func(write bool, data []byte) []byte {
 					if write {
 						message := requestMessage(data[0])
-						dma.DREQ(message.channel(), message.action() == dmaRequestActionSet)
+						dma.DREQ(message.channel()).Set(message.action() == dmaRequestActionSet)
 
 					}
 					return nil

@@ -4,7 +4,7 @@ import "github.com/rigidsh/govm/internal/kvm"
 
 func createReadableTestDevice(vm *kvm.VM, dma *DMA, channelNumber uint8, port uint16, data []byte) {
 	readPosition := 0
-	completed := false
+	tcLine := NewLine()
 
 	dma.ConnectChannel(channelNumber, &ChannelConnector{
 		Read: func(buf []byte) uint16 {
@@ -14,22 +14,20 @@ func createReadableTestDevice(vm *kvm.VM, dma *DMA, channelNumber uint8, port ui
 			}
 			return uint16(len(data) - readPosition)
 		},
-		TCCallback: func() {
-			completed = true
-		},
+		TC: tcLine,
 	})
 
 	vm.RegisterPortHandler(port, kvm.CompositePort(
 		kvm.CallbackPort(func(write bool, data []byte) []byte {
-			dma.DREQ(channelNumber, true)
+			dma.DREQ(channelNumber).Set(true)
 			return nil
 		}),
 		kvm.CallbackPort(func(write bool, data []byte) []byte {
 			result := []byte{0}
-			if completed {
+			if tcLine.Get() {
 				result = []byte{1}
 			}
-			completed = false
+			tcLine.Set(false)
 
 			return result
 		}),
@@ -45,29 +43,27 @@ func createWritableTestDevice(vm *kvm.VM, dma *DMA, channelNumber uint8, port ui
 	buffer := &testDeviceBuffer{
 		data: make([]byte, 0),
 	}
-	completed := false
+	tcLine := NewLine()
 
 	dma.ConnectChannel(channelNumber, &ChannelConnector{
 		Write: func(buf []byte) uint16 {
 			buffer.data = append(buffer.data, buf...)
 			return uint16(len(buf))
 		},
-		TCCallback: func() {
-			completed = true
-		},
+		TC: tcLine,
 	})
 
 	vm.RegisterPortHandler(port, kvm.CompositePort(
 		kvm.CallbackPort(func(write bool, data []byte) []byte {
-			dma.DREQ(channelNumber, true)
+			dma.DREQ(channelNumber).Set(true)
 			return nil
 		}),
 		kvm.CallbackPort(func(write bool, data []byte) []byte {
 			result := []byte{0}
-			if completed {
+			if tcLine.Get() {
 				result = []byte{1}
 			}
-			completed = false
+			tcLine.Set(false)
 
 			return result
 		}),

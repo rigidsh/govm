@@ -10,7 +10,7 @@ import (
 type channel struct {
 	dma *DMA
 
-	dreq *line
+	dreq *Line
 
 	direction uint8
 
@@ -36,7 +36,7 @@ func newChannel(dma *DMA, baseAddressPort, pagePort, baseCounterPort uint16) *ch
 	channel := &channel{
 		enabled: false,
 		dma:     dma,
-		dreq:    newLine(),
+		dreq:    NewLine(),
 	}
 
 	dma.vm.RegisterPortHandler(baseAddressPort,
@@ -164,9 +164,9 @@ func (channel *channel) readAndClearTC() bool {
 
 func (channel *channel) tc() {
 	channel.tcFlag = true
-	channel.dreq.set(false)
-	if channel.connector.TCCallback != nil {
-		channel.connector.TCCallback()
+	channel.dreq.Set(false)
+	if channel.connector.TC != nil {
+		channel.connector.TC.Set(true)
 	}
 
 	if channel.autoInit {

@@ -104,7 +104,7 @@ func TestDMA_MMTProcess(t *testing.T) {
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
 			asm.MOV(asm.AL(), asm.Impl8(0x00)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
-			// Write 0b00001000 to mode port(set Write mode(0b10) for ch0)
+			// Write 0b00001000 to mode port(Set Write mode(0b10) for ch0)
 			asm.MOV(asm.AL(), asm.Impl8(0b00001000)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.ModePort)), asm.AL()),
 			//Write 0b00000001 to control port(enable MMMT)
@@ -171,7 +171,7 @@ func TestDMA_ReadFromDevice(t *testing.T) {
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
 			asm.MOV(asm.AL(), asm.Impl8(0x00)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
-			// Write 0b00001000 to mode port(set ReadMode mode(0b11) for ch0)
+			// Write 0b00001000 to mode port(Set ReadMode mode(0b11) for ch0)
 			asm.MOV(asm.AL(), asm.Impl8(0b00001100)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.ModePort)), asm.AL()),
 			//Trigger test device
@@ -235,7 +235,7 @@ func TestDMA_WriteToDevice(t *testing.T) {
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
 			asm.MOV(asm.AL(), asm.Impl8(0x00)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
-			// Write 0b00001000 to mode port(set WriteMode mode(0b10) for ch0)
+			// Write 0b00001000 to mode port(Set WriteMode mode(0b10) for ch0)
 			asm.MOV(asm.AL(), asm.Impl8(0b00001000)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.ModePort)), asm.AL()),
 			//Trigger test device

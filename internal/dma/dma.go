@@ -13,9 +13,9 @@ var writeTransferType transferType = 0b10
 var readTransferType transferType = 0b11
 
 type ChannelConnector struct {
-	Read       func(buf []byte) uint16
-	Write      func(buf []byte) uint16
-	TCCallback func()
+	Read  func(buf []byte) uint16
+	Write func(buf []byte) uint16
+	TC    *Line
 }
 
 func CreateDMA(vm *kvm.VM, config PortConfig) *DMA {
@@ -92,10 +92,10 @@ func (dma *DMA) waitDREQ() bool {
 	}
 
 	select {
-	case <-dma.channels[0].dreq.change:
-	case <-dma.channels[1].dreq.change:
-	case <-dma.channels[2].dreq.change:
-	case <-dma.channels[3].dreq.change:
+	case <-dma.channels[0].dreq.PosEdge():
+	case <-dma.channels[1].dreq.PosEdge():
+	case <-dma.channels[2].dreq.PosEdge():
+	case <-dma.channels[3].dreq.PosEdge():
 	case <-dma.stopChan:
 		return false
 	}
@@ -117,7 +117,7 @@ func (dma *DMA) reset() {
 	}
 }
 
-func (dma *DMA) DREQ(channel uint8, value bool) {
+func (dma *DMA) DREQ(channel uint8) *Line {
 	fmt.Println("DREQ")
-	dma.channels[channel].dreq.set(value)
+	return dma.channels[channel].dreq
 }

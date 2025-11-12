@@ -1,21 +1,32 @@
 package dma
 
-type line struct {
-	value  bool
-	change chan interface{}
+type Line struct {
+	value   bool
+	posEdge chan interface{}
 }
 
-func (line *line) set(value bool) {
+func (line *Line) Set(value bool) {
 	notify := line.value != value && value
 	line.value = value
 	if notify {
-		line.change <- nil
+		select {
+		case line.posEdge <- nil:
+		}
+
 	}
 }
 
-func newLine() *line {
-	return &line{
-		value:  false,
-		change: make(chan interface{}, 1),
+func (line *Line) Get() bool {
+	return line.value
+}
+
+func (line *Line) PosEdge() chan interface{} {
+	return line.posEdge
+}
+
+func NewLine() *Line {
+	return &Line{
+		value:   false,
+		posEdge: make(chan interface{}, 0),
 	}
 }
