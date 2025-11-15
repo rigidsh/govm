@@ -15,6 +15,7 @@ type FDC struct {
 	dreqLine     *dma.Line
 	dmaConnector *dma.ChannelConnector
 	drives       [4]*diskDrive
+	dataPort     *kvm.CommandPort
 
 	busy         bool
 	currentRead  io.Reader

@@ -2,10 +2,10 @@ package kvm
 
 type CommandDefinition struct {
 	ArgumentSize uint8
-	Command      func(argument []byte, resultCallback func([]byte))
+	Command      func(argument []byte)
 }
 
-func NewCommandDefinition(argumentSize uint8, command func(argument []byte, resultCallback func([]byte))) *CommandDefinition {
+func NewCommandDefinition(argumentSize uint8, command func(argument []byte)) *CommandDefinition {
 	return &CommandDefinition{ArgumentSize: argumentSize, Command: command}
 }
 
@@ -25,7 +25,7 @@ func (port *CommandPort) RegisterCommand(command byte, definition *CommandDefini
 	port.commands[command] = definition
 }
 
-func (port *CommandPort) writeResult(result []byte) {
+func (port *CommandPort) WriteResult(result []byte) {
 	switch port.state.(type) {
 	case *processingCommandPortStatus:
 		port.state = &responseCommandPortStatus{
@@ -40,7 +40,7 @@ func (port *CommandPort) processCommandData(data byte) {
 	case *waitRequestCommandPortStatus:
 		if command, ok := port.commands[data]; ok {
 			if command.ArgumentSize == 0 {
-				command.Command([]byte{}, port.writeResult)
+				command.Command([]byte{})
 				port.state = &processingCommandPortStatus{}
 			} else {
 				port.state = &readRequestParamCommandPortStatus{
@@ -57,7 +57,7 @@ func (port *CommandPort) processCommandData(data byte) {
 		paramReader.position = paramReader.position + 1
 		if paramReader.position == paramReader.size {
 			port.state = &processingCommandPortStatus{}
-			paramReader.command.Command(paramReader.buf, port.writeResult)
+			paramReader.command.Command(paramReader.buf)
 		}
 	}
 }

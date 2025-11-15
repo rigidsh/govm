@@ -23,10 +23,10 @@ func (message readDataMessage) dataLength() uint8            { return message[7]
 
 func (fdc *FDC) setupDataPort(port uint16) {
 
-	dataPort := kvm.NewCommandPort()
+	fdc.dataPort = kvm.NewCommandPort()
 
-	dataPort.RegisterCommand(readDataCommand, kvm.NewCommandDefinition(8,
-		func(argument []byte, resultCallback func([]byte)) {
+	fdc.dataPort.RegisterCommand(readDataCommand, kvm.NewCommandDefinition(8,
+		func(argument []byte) {
 			message := readDataMessage(argument)
 			fdc.readData(
 				uint8(message.selector().drive()),
@@ -38,16 +38,16 @@ func (fdc *FDC) setupDataPort(port uint16) {
 				message.gapLength(),
 				message.dataLength(),
 				func() {
-					resultCallback(make([]byte, 7))
+					fdc.dataPort.WriteResult(make([]byte, 7))
 				},
 			)
 		}),
 	)
-	dataPort.RegisterCommand(writeDataCommand, kvm.NewCommandDefinition(8,
-		func(argument []byte, resultCallback func([]byte)) {
+	fdc.dataPort.RegisterCommand(writeDataCommand, kvm.NewCommandDefinition(8,
+		func(argument []byte) {
 
 		}),
 	)
 
-	fdc.vm.RegisterPortHandler(port, dataPort)
+	fdc.vm.RegisterPortHandler(port, fdc.dataPort)
 }
