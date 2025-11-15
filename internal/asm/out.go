@@ -7,9 +7,13 @@ func OUT(port, from Argument) Command {
 		switch port.(type) {
 		case impl8:
 			result = append(result, 0xE6)
+		case dx:
+			result = append(result, 0xEE)
 		default:
 			panic("Not supported operation")
 		}
+	default:
+		panic("Not supported operation")
 	}
 
 	result = append(result, port.bytes()...)

@@ -5,6 +5,10 @@ type CommandDefinition struct {
 	Command      func(argument []byte, resultCallback func([]byte))
 }
 
+func NewCommandDefinition(argumentSize uint8, command func(argument []byte, resultCallback func([]byte))) *CommandDefinition {
+	return &CommandDefinition{ArgumentSize: argumentSize, Command: command}
+}
+
 type CommandPort struct {
 	state    commandPortState
 	commands map[byte]*CommandDefinition

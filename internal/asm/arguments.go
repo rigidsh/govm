@@ -84,6 +84,14 @@ type dh struct{}
 
 func (_ dh) bytes() []byte { return []byte{} }
 
+func DX() Argument {
+	return dx{}
+}
+
+type dx struct{}
+
+func (_ dx) bytes() []byte { return []byte{} }
+
 func ES() Argument {
 	return es{}
 }

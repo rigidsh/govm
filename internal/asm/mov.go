@@ -61,6 +61,13 @@ func MOV(to, from Argument) Command {
 		default:
 			panic("Not supported operation")
 		}
+	case dx:
+		switch from.(type) {
+		case impl16:
+			result = append(result, 0xBA)
+		default:
+			panic("Not supported operation")
+		}
 	case es:
 		switch from.(type) {
 		case ax:

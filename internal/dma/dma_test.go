@@ -24,9 +24,9 @@ func TestDMA_WriteReadBaseAddress(t *testing.T) {
 			asm.MOV(asm.AL(), asm.Impl8(0x02)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseAddressPort[0])), asm.AL()),
 			// Read current address for DMA ch0
-			asm.IN(asm.Impl8(uint8(MasterPortConfig.BaseAddressPort[0])), asm.AL()),
+			asm.IN(asm.AL(), asm.Impl8(uint8(MasterPortConfig.BaseAddressPort[0]))),
 			kvm_testing.WRITE_TEST_RESULT_FROM_AL(),
-			asm.IN(asm.Impl8(uint8(MasterPortConfig.BaseAddressPort[0])), asm.AL()),
+			asm.IN(asm.AL(), asm.Impl8(uint8(MasterPortConfig.BaseAddressPort[0]))),
 			kvm_testing.WRITE_TEST_RESULT_FROM_AL(),
 
 			kvm_testing.STOP_TEST(0),
@@ -57,9 +57,9 @@ func TestDMA_WriteReadBaseCounter(t *testing.T) {
 			asm.MOV(asm.AL(), asm.Impl8(0x02)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
 			// Read current counter for DMA ch0
-			asm.IN(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
+			asm.IN(asm.AL(), asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0]))),
 			kvm_testing.WRITE_TEST_RESULT_FROM_AL(),
-			asm.IN(asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0])), asm.AL()),
+			asm.IN(asm.AL(), asm.Impl8(uint8(MasterPortConfig.BaseCounterPort[0]))),
 			kvm_testing.WRITE_TEST_RESULT_FROM_AL(),
 
 			kvm_testing.STOP_TEST(0),
@@ -114,7 +114,7 @@ func TestDMA_MMTProcess(t *testing.T) {
 			asm.MOV(asm.AL(), asm.Impl8(0b00000100)),
 			asm.OUT(asm.Impl8(uint8(MasterPortConfig.RequestPort)), asm.AL()),
 			//Read tc for chan 0 in circle
-			asm.IN(asm.Impl8(uint8(MasterPortConfig.StatusPort)), asm.AL()),
+			asm.IN(asm.AL(), asm.Impl8(uint8(MasterPortConfig.StatusPort))),
 			asm.CMP(asm.AX(), asm.Impl16(0b00010000)),
 			asm.JNE(asm.RelAddr(-7)),
 			//Copy result to port
@@ -177,7 +177,7 @@ func TestDMA_ReadFromDevice(t *testing.T) {
 			//Trigger test device
 			asm.OUT(asm.Impl8(uint8(0xA0)), asm.AL()),
 			//Read tc for chan 0 in circle
-			asm.IN(asm.Impl8(uint8(MasterPortConfig.StatusPort)), asm.AL()),
+			asm.IN(asm.AL(), asm.Impl8(uint8(MasterPortConfig.StatusPort))),
 			asm.CMP(asm.AX(), asm.Impl16(0b00010000)),
 			asm.JNE(asm.RelAddr(-7)),
 			//Copy result to port
@@ -241,7 +241,7 @@ func TestDMA_WriteToDevice(t *testing.T) {
 			//Trigger test device
 			asm.OUT(asm.Impl8(uint8(0xA0)), asm.AL()),
 			//Read tc for chan 0 in circle
-			asm.IN(asm.Impl8(uint8(MasterPortConfig.StatusPort)), asm.AL()),
+			asm.IN(asm.AL(), asm.Impl8(uint8(MasterPortConfig.StatusPort))),
 			asm.CMP(asm.AX(), asm.Impl16(0b00010000)),
 			asm.JNE(asm.RelAddr(-7)),
 

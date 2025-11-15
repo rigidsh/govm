@@ -72,7 +72,6 @@ func (dma *DMA) run() {
 	go func() {
 		for dma.waitDREQ() {
 
-			fmt.Println("DMA iteration")
 			for i := 0; i < 4; i++ {
 				if dma.channels[i].dreq.value {
 					dma.channels[i].doIteration()
@@ -83,7 +82,6 @@ func (dma *DMA) run() {
 }
 
 func (dma *DMA) waitDREQ() bool {
-	fmt.Println("Check DREQ")
 	if dma.channels[0].dreq.value ||
 		dma.channels[1].dreq.value ||
 		dma.channels[2].dreq.value ||
@@ -120,4 +118,9 @@ func (dma *DMA) reset() {
 func (dma *DMA) DREQ(channel uint8) *Line {
 	fmt.Println("DREQ")
 	return dma.channels[channel].dreq
+}
+
+func (dma *DMA) ConnectChannel(channelNumber uint8, connector *ChannelConnector) *Line {
+	dma.channels[channelNumber].connector = connector
+	return dma.channels[channelNumber].dreq
 }

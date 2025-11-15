@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/rigidsh/govm/internal/bios"
-	"github.com/rigidsh/govm/internal/dma"
 	"github.com/rigidsh/govm/internal/kvm"
 )
 
@@ -21,7 +20,8 @@ func main() {
 		return
 	}
 
-	dma.CreateDMA(vm, dma.MasterPortConfig)
+	//dmaController := dma.CreateDMA(vm, dma.MasterPortConfig)
+	//fdc.CreateFDC(vm, dmaController)
 
 	fmt.Println("VM created.")
 

@@ -25,7 +25,3 @@ type PortConfig struct {
 	MasterRestPort    uint16
 	StatusPort        uint16
 }
-
-func (dma *DMA) ConnectChannel(channelNumber uint8, connector *ChannelConnector) {
-	dma.channels[channelNumber].connector = connector
-}
