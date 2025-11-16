@@ -12,10 +12,9 @@ var verifyTransferType transferType = 0b01
 var writeTransferType transferType = 0b10
 var readTransferType transferType = 0b11
 
-type ChannelConnector struct {
-	Read  func(buf []byte) uint16
-	Write func(buf []byte) uint16
-	TC    *Line
+type ChannelConnector interface {
+	Read(buf []byte) uint16
+	Write(buf []byte) uint16
 }
 
 func CreateDMA(vm *kvm.VM, config PortConfig) *DMA {
@@ -103,7 +102,7 @@ func (dma *DMA) waitDREQ() bool {
 
 func (dma *DMA) updateMmt(value bool) {
 	if value {
-		dma.ConnectChannel(0, mmtBuffConnector(dma))
+		dma.ConnectChannel(0, &mmtBuffConnector{dma: dma}, nil)
 	}
 	dma.mmt = value
 }
@@ -120,7 +119,8 @@ func (dma *DMA) DREQ(channel uint8) *Line {
 	return dma.channels[channel].dreq
 }
 
-func (dma *DMA) ConnectChannel(channelNumber uint8, connector *ChannelConnector) *Line {
+func (dma *DMA) ConnectChannel(channelNumber uint8, connector ChannelConnector, tc *Line) *Line {
 	dma.channels[channelNumber].connector = connector
+	dma.channels[channelNumber].tcLine = tc
 	return dma.channels[channelNumber].dreq
 }

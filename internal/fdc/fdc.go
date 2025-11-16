@@ -13,45 +13,27 @@ type DriveNumber uint8
 type FDC struct {
 	vm           *kvm.VM
 	dreqLine     *dma.Line
-	dmaConnector *dma.ChannelConnector
+	tcLine       *dma.Line
+	dmaConnector *dma.BufConnector
 	drives       [4]*diskDrive
 	dataPort     *kvm.CommandPort
 
-	busy         bool
-	currentRead  io.Reader
-	currentWrite io.Writer
+	busy bool
 }
 
 func CreateFDC(vm *kvm.VM, dmaController *dma.DMA) *FDC {
 	fdc := &FDC{
-		vm: vm,
+		vm:     vm,
+		tcLine: dma.NewLine(),
 	}
 
 	for i := 0; i < 4; i++ {
 		fdc.drives[i] = &diskDrive{}
 	}
 
-	fdc.dmaConnector = &dma.ChannelConnector{
-		Write: func(buf []byte) uint16 {
-			if fdc.currentWrite != nil {
-				result, _ := fdc.currentWrite.Write(buf)
-				fmt.Println("Write to FDC")
-				return uint16(result)
-			}
-			return 0
-		},
-		Read: func(buf []byte) uint16 {
-			if fdc.currentRead != nil {
-				result, _ := fdc.currentRead.Read(buf)
-				fmt.Println("Read from FDC")
-				return uint16(result)
-			}
-			return 0
-		},
-		TC: dma.NewLine(),
-	}
+	fdc.dmaConnector = dma.NewBufConnector(512)
 
-	fdc.dreqLine = dmaController.ConnectChannel(2, fdc.dmaConnector)
+	fdc.dreqLine = dmaController.ConnectChannel(2, fdc.dmaConnector, fdc.tcLine)
 
 	fdc.setupDORPort(0x3F2)
 	fdc.setupMSRPort(0x3F4)
@@ -71,21 +53,26 @@ func (fdc *FDC) dma(value bool) {
 func (fdc *FDC) readData(drive, head, cylinder, sector, sectorSize, endOfTrack, gapLength, dataLength uint8, callback func()) {
 	fmt.Println("Do read FDC")
 	fdc.busy = true
-
 	selectedDrive := fdc.drives[drive-1]
-	selectedDrive.seek(cylinder)
-	selectedDrive.setSettings(sectorSize, gapLength, dataLength)
-	reader, _ := selectedDrive.sectorReader(sector, endOfTrack, head, head)
-	//TODO: process error
-	fdc.currentRead = reader
 	fdc.dreqLine.Set(true)
 
 	go func() {
-		<-fdc.dmaConnector.TC.PosEdge()
-		fdc.busy = false
-		callback()
+		selectedDrive.seek(cylinder)
+		selectedDrive.setSettings(sectorSize, gapLength, dataLength)
+		reader, _ := selectedDrive.sectorReader(sector)
+		for {
+			if fdc.tcLine.Get() {
+				return
+			}
+			err := fdc.dmaConnector.ReadFrom(reader)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				return
+			}
+		}
 	}()
-	fdc.dreqLine.Set(true)
 }
 
 func (fdc *FDC) InsertDisk(drive uint8, disk Disk) {

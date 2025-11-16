@@ -1,21 +1,38 @@
 package dma
 
-import "github.com/rigidsh/govm/internal/kvm"
+import (
+	"github.com/rigidsh/govm/internal/kvm"
+)
+
+type testChannelConnector struct {
+	writeFunc func([]byte) uint16
+	readFunc  func([]byte) uint16
+}
+
+func (connector testChannelConnector) Read(buf []byte) uint16 {
+	return connector.readFunc(buf)
+}
+
+func (connector testChannelConnector) Write(buf []byte) uint16 {
+	return connector.writeFunc(buf)
+}
 
 func createReadableTestDevice(vm *kvm.VM, dma *DMA, channelNumber uint8, port uint16, data []byte) {
 	readPosition := 0
 	tcLine := NewLine()
 
-	dma.ConnectChannel(channelNumber, &ChannelConnector{
-		Read: func(buf []byte) uint16 {
-			copy(buf, data[readPosition:])
-			if len(buf) > len(data)-readPosition {
-				return uint16(len(buf))
-			}
-			return uint16(len(data) - readPosition)
+	dma.ConnectChannel(channelNumber,
+		&testChannelConnector{
+			readFunc: func(buf []byte) uint16 {
+				copy(buf, data[readPosition:])
+				if len(buf) > len(data)-readPosition {
+					return uint16(len(buf))
+				}
+				return uint16(len(data) - readPosition)
+			},
 		},
-		TC: tcLine,
-	})
+		tcLine,
+	)
 
 	vm.RegisterPortHandler(port, kvm.CompositePort(
 		kvm.CallbackPort(func(write bool, data []byte) []byte {
@@ -45,13 +62,15 @@ func createWritableTestDevice(vm *kvm.VM, dma *DMA, channelNumber uint8, port ui
 	}
 	tcLine := NewLine()
 
-	dma.ConnectChannel(channelNumber, &ChannelConnector{
-		Write: func(buf []byte) uint16 {
-			buffer.data = append(buffer.data, buf...)
-			return uint16(len(buf))
+	dma.ConnectChannel(channelNumber,
+		&testChannelConnector{
+			writeFunc: func(buf []byte) uint16 {
+				buffer.data = append(buffer.data, buf...)
+				return uint16(len(buf))
+			},
 		},
-		TC: tcLine,
-	})
+		tcLine,
+	)
 
 	vm.RegisterPortHandler(port, kvm.CompositePort(
 		kvm.CallbackPort(func(write bool, data []byte) []byte {

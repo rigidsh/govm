@@ -1,10 +1,14 @@
 package fdc
 
-import "io"
+import (
+	"bytes"
+	"io"
+)
 
 type diskDrive struct {
 	disk            Disk
 	currentCylinder uint8
+	currentHead     uint8
 
 	sectorSize uint8
 	gapLength  uint8
@@ -21,6 +25,11 @@ func (drive *diskDrive) seek(cylinder uint8) {
 	drive.currentCylinder = cylinder
 }
 
-func (drive *diskDrive) sectorReader(fromSector, toSector, fromHead, toHead uint8) (io.Reader, error) {
-	return drive.disk.read(), nil
+func (drive *diskDrive) sectorReader(sector uint8) (io.Reader, error) {
+	buf := make([]byte, 512)
+	for i := 0; i < 512; i++ {
+		buf[i] = 0xFF
+	}
+
+	return bytes.NewBuffer(buf), nil
 }

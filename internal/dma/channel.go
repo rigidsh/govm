@@ -14,13 +14,14 @@ type channel struct {
 
 	direction uint8
 
-	connector *ChannelConnector
+	connector ChannelConnector
 
 	transferType transferType
 	autoInit     bool
 
 	enabled bool
 
+	tcLine *Line
 	tcFlag bool
 
 	baseAddress uint16
@@ -165,8 +166,8 @@ func (channel *channel) readAndClearTC() bool {
 func (channel *channel) tc() {
 	channel.tcFlag = true
 	channel.dreq.Set(false)
-	if channel.connector.TC != nil {
-		channel.connector.TC.Set(true)
+	if channel.tcLine != nil {
+		channel.tcLine.Set(true)
 	}
 
 	if channel.autoInit {
