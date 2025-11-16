@@ -61,7 +61,9 @@ func (fdc *FDC) readData(drive, head, cylinder, sector, sectorSize, endOfTrack, 
 		selectedDrive.setSettings(sectorSize, gapLength, dataLength)
 		reader, _ := selectedDrive.sectorReader(sector)
 		for {
+
 			if fdc.tcLine.Get() {
+				fdc.busy = false
 				return
 			}
 			err := fdc.dmaConnector.ReadFrom(reader)
