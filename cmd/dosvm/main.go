@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/rigidsh/govm/internal/bios"
+	"github.com/rigidsh/govm/internal/dma"
+	"github.com/rigidsh/govm/internal/fdc"
 	"github.com/rigidsh/govm/internal/kvm"
 )
 
@@ -20,8 +22,16 @@ func main() {
 		return
 	}
 
-	//dmaController := dma.CreateDMA(vm, dma.MasterPortConfig)
-	//fdc.CreateFDC(vm, dmaController)
+	dmaController := dma.CreateDMA(vm, dma.MasterPortConfig)
+	floppyController := fdc.CreateFDC(vm, dmaController)
+
+	dosDiskImage, err := fdc.OpenRaw144DiskImage("/home/alex/x86BOOT.img")
+	if err != nil {
+		fmt.Printf("Can't open disk image")
+		return
+	}
+
+	floppyController.InsertDisk(0, dosDiskImage)
 
 	fmt.Println("VM created.")
 
@@ -51,7 +61,9 @@ func main() {
 		log.Fatalf("Can't map low ram", err)
 	}
 
-	fmt.Println("Memory is r4eady.")
+	kvm.SetupA20Register(vm)
+
+	fmt.Println("Memory is ready.")
 
 	_, err = kvm.CreateDebugPort(vm)
 	if err != nil {

@@ -3,6 +3,7 @@ package fdc
 import (
 	"bytes"
 	"io"
+	"os"
 )
 
 type Disk interface {
@@ -29,4 +30,18 @@ func (disk InMemoryRawDisk) SectorReader(cylinder uint8, head uint8, sector uint
 		},
 
 		bytes.NewBuffer(disk[imageOffset : imageOffset+Floppy144DiskType.SectorSize.Bytes()])
+}
+
+func OpenRaw144DiskImage(file string) (Disk, error) {
+	openFile, err := os.OpenFile(file, os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { openFile.Close() }()
+	data, err := io.ReadAll(openFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return InMemoryRawDisk(data), nil
 }

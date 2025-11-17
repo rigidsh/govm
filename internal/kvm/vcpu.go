@@ -102,7 +102,13 @@ func (cpu *VCPU) Run(callback func(run *Run) bool) error {
 				}
 				continue
 			}
-			//fmt.Printf("IO %t: %X\n", io.Direction == 1, io.Port)
+			//TODO: CMOS impl
+			if io.Port == 0x70 || io.Port == 0x71 {
+				continue
+			}
+
+			fmt.Printf("IO operation is not implemented. Port: %X, Direction: %d\n", io.Port, io.Direction)
+			continue
 		}
 
 		if !callback(cpu.runStruct) {
