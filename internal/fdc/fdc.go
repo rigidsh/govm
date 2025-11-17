@@ -12,9 +12,9 @@ type DriveNumber uint8
 
 type FDC struct {
 	vm           *kvm.VM
-	dreqLine     *dma.Line
-	tcLine       *dma.Line
-	dmaConnector *dma.BufConnector
+	dreqLine     dma.Line
+	tcLine       *dma.ObservableLine
+	dmaConnector *dma.BufRReadConnector
 	drives       [4]*diskDrive
 	dataPort     *kvm.CommandPort
 
@@ -31,9 +31,9 @@ func CreateFDC(vm *kvm.VM, dmaController *dma.DMA) *FDC {
 		fdc.drives[i] = &diskDrive{}
 	}
 
-	fdc.dmaConnector = dma.NewBufConnector(512)
-
-	fdc.dreqLine = dmaController.ConnectChannel(2, fdc.dmaConnector, fdc.tcLine)
+	fdc.dmaConnector = dma.NewBufReadConnector(dmaController.DREQ(2), 512)
+	dmaController.ConnectChannel(2, fdc.dmaConnector, fdc.tcLine)
+	fdc.dreqLine = dmaController.DREQ(2)
 
 	fdc.setupDORPort(0x3F2)
 	fdc.setupMSRPort(0x3F4)
@@ -59,22 +59,36 @@ func (fdc *FDC) readData(drive, head, cylinder, sector, sectorSize, endOfTrack, 
 	go func() {
 		selectedDrive.seek(cylinder)
 		selectedDrive.setSettings(sectorSize, gapLength, dataLength)
-		reader, _ := selectedDrive.sectorReader(sector)
-		for {
-
+		for sector != endOfTrack {
 			if fdc.tcLine.Get() {
 				fdc.busy = false
 				return
 			}
-			err := fdc.dmaConnector.ReadFrom(reader)
+
+			err := fdc.readSector(selectedDrive, sector)
 			if err != nil {
-				if err == io.EOF {
-					break
-				}
 				return
 			}
+			sector = sector + 1
 		}
 	}()
+}
+
+func (fdc *FDC) readSector(drive *diskDrive, sector uint8) error {
+	reader, _ := drive.sectorReader(sector)
+	for {
+		if fdc.tcLine.Get() {
+			fdc.busy = false
+			return nil
+		}
+		err := fdc.dmaConnector.ReadFrom(reader)
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+	}
 }
 
 func (fdc *FDC) InsertDisk(drive uint8, disk Disk) {

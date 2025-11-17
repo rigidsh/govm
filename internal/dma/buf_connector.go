@@ -5,27 +5,33 @@ import (
 	"sync"
 )
 
-type BufConnector struct {
+type BufRReadConnector struct {
 	buf           []byte
 	readPosition  int
 	writePosition int
 	capacity      int
 
+	dreq Line
+
 	mutex sync.Mutex
 }
 
-func NewBufConnector(bufSize int) *BufConnector {
-	return &BufConnector{
+func NewBufReadConnector(dreq Line, bufSize int) *BufRReadConnector {
+	return &BufRReadConnector{
 		buf:           make([]byte, bufSize),
 		readPosition:  0,
 		writePosition: 0,
 		capacity:      bufSize,
+		dreq:          dreq,
 	}
 }
 
-func (connector *BufConnector) ReadFrom(reader io.Reader) error {
+func (connector *BufRReadConnector) ReadFrom(reader io.Reader) error {
 	connector.mutex.Lock()
 	defer connector.mutex.Unlock()
+	defer func() {
+		connector.dreq.Set(connector.capacity != len(connector.buf))
+	}()
 
 	if connector.writePosition == connector.readPosition && connector.capacity == 0 {
 		return nil
@@ -53,9 +59,12 @@ func (connector *BufConnector) ReadFrom(reader io.Reader) error {
 	return nil
 }
 
-func (connector *BufConnector) Read(buf []byte) uint16 {
+func (connector *BufRReadConnector) Read(buf []byte) uint16 {
 	connector.mutex.Lock()
 	defer connector.mutex.Unlock()
+	defer func() {
+		connector.dreq.Set(connector.capacity != len(connector.buf))
+	}()
 
 	if connector.writePosition == connector.readPosition && connector.capacity == len(connector.buf) {
 		return 0
@@ -85,6 +94,6 @@ func (connector *BufConnector) Read(buf []byte) uint16 {
 	return 0
 }
 
-func (connector *BufConnector) Write(buf []byte) uint16 {
+func (connector *BufRReadConnector) Write(buf []byte) uint16 {
 	return 0
 }

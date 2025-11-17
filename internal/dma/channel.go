@@ -10,7 +10,7 @@ import (
 type channel struct {
 	dma *DMA
 
-	dreq *Line
+	dreq *ObservableLine
 
 	direction uint8
 
@@ -21,7 +21,7 @@ type channel struct {
 
 	enabled bool
 
-	tcLine *Line
+	tcLine *ObservableLine
 	tcFlag bool
 
 	baseAddress uint16

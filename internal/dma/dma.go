@@ -77,6 +77,7 @@ func (dma *DMA) run() {
 				}
 			}
 		}
+		fmt.Println("DMA stop :(")
 	}()
 }
 
@@ -114,13 +115,11 @@ func (dma *DMA) reset() {
 	}
 }
 
-func (dma *DMA) DREQ(channel uint8) *Line {
-	fmt.Println("DREQ")
+func (dma *DMA) DREQ(channel uint8) Line {
 	return dma.channels[channel].dreq
 }
 
-func (dma *DMA) ConnectChannel(channelNumber uint8, connector ChannelConnector, tc *Line) *Line {
+func (dma *DMA) ConnectChannel(channelNumber uint8, connector ChannelConnector, tc *ObservableLine) {
 	dma.channels[channelNumber].connector = connector
 	dma.channels[channelNumber].tcLine = tc
-	return dma.channels[channelNumber].dreq
 }
