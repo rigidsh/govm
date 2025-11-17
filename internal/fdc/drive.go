@@ -1,7 +1,6 @@
 package fdc
 
 import (
-	"bytes"
 	"io"
 )
 
@@ -25,11 +24,13 @@ func (drive *diskDrive) seek(cylinder uint8) {
 	drive.currentCylinder = cylinder
 }
 
-func (drive *diskDrive) sectorReader(sector uint8) (io.Reader, error) {
-	buf := make([]byte, 512)
-	for i := 0; i < 512; i++ {
-		buf[i] = 0xFF
-	}
+func (drive *diskDrive) head(head uint8) {
+	drive.currentHead = head
+}
 
-	return bytes.NewBuffer(buf), nil
+func (drive *diskDrive) sectorReader(sector uint8) (io.Reader, error) {
+	_, reader := drive.disk.SectorReader(drive.currentCylinder, drive.currentHead, sector)
+
+	return reader, nil
+
 }

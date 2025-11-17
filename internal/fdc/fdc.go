@@ -14,7 +14,7 @@ type FDC struct {
 	vm           *kvm.VM
 	dreqLine     dma.Line
 	tcLine       *dma.ObservableLine
-	dmaConnector *dma.BufRReadConnector
+	dmaConnector *dma.BuffReadConnector
 	drives       [4]*diskDrive
 	dataPort     *kvm.CommandPort
 
@@ -31,7 +31,7 @@ func CreateFDC(vm *kvm.VM, dmaController *dma.DMA) *FDC {
 		fdc.drives[i] = &diskDrive{}
 	}
 
-	fdc.dmaConnector = dma.NewBufReadConnector(dmaController.DREQ(2), 512)
+	fdc.dmaConnector = dma.NewBuffReadConnector(dmaController.DREQ(2), 512)
 	dmaController.ConnectChannel(2, fdc.dmaConnector, fdc.tcLine)
 	fdc.dreqLine = dmaController.DREQ(2)
 
@@ -54,11 +54,11 @@ func (fdc *FDC) readData(drive, head, cylinder, sector, sectorSize, endOfTrack, 
 	fmt.Println("Do read FDC")
 	fdc.busy = true
 	selectedDrive := fdc.drives[drive-1]
-	fdc.dreqLine.Set(true)
 
 	go func() {
-		selectedDrive.seek(cylinder)
 		selectedDrive.setSettings(sectorSize, gapLength, dataLength)
+		selectedDrive.seek(cylinder)
+		selectedDrive.head(head)
 		for sector != endOfTrack {
 			if fdc.tcLine.Get() {
 				fdc.busy = false
